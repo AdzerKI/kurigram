@@ -16,6 +16,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
+import asyncio
+import contextlib
 import logging
 
 import pyrogram
@@ -60,7 +62,12 @@ class Terminate:
         self.updates_watchdog_event.set()
 
         if self.updates_watchdog_task is not None:
-            await self.updates_watchdog_task
+            self.updates_watchdog_task.cancel()
+
+            with contextlib.suppress(asyncio.CancelledError):
+                await self.updates_watchdog_task
+
+            self.updates_watchdog_task = None
 
         self.updates_watchdog_event.clear()
 
